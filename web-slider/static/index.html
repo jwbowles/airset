@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head> 
+	<title>AirSet Sliders</title> 
+	<script src="quick2web/init.js"></script>
+</head>
+<body>
+	<div data-role="page">
+	
+	  <div data-role="header">
+		<h1>AirSet</h1>
+	  </div>
+	
+	  <div data-role="content">
+		<p>Adjust Volume:</p>
+		<p>
+		<input type="range"
+			min="0" max="63"
+			data-highlight="true"
+			data-shared="/volume-value" />
+		</p>
+		<p>Adjust Tone:</p>
+		<p>
+		<input type="range"
+			min="0" max="63"
+			data-highlight="true"
+			data-shared="/tone-value" />
+		</p>
+		<p>Adjust Sustain</p>
+		<p>
+		<input type="range"
+			min="0" max="63"
+			data-highlight="true"
+			data-shared="/sustain-value" />
+		</p>
+		
+		<p><button id="read_preset" data-shared="/get-preset">Use Preset</button><button id="save_preset" data-shared="/save-preset">Save As Preset</button></p>
+	  </div>
+	
+	</div>
+</body>
+</html>
