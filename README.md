@@ -1,1 +1,1 @@
-Experiments with the Raspberry Pi
+Wirelessly controlled distortion pedal with the Raspberry Pi
