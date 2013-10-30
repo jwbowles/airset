@@ -1,8 +1,8 @@
 Simple example of:
 
-*   ...a mobile web-app that contains slider bars...
+*   ...a mobile web-app that contains a slider bar...
 *   ...that communicates to a Python program via WebSockets...
-*   ...that sends bits over SPI.
+*   ...that adjusts an LED bar-graph.
 
 Setup
 -----
@@ -12,7 +12,7 @@ Setup
 Run
 ---
 
-    sudo ./run
+    ./run
 
 Then point your desktop or mobile browser to http://[hostname]:8888/. Try multiple browsers for fun.
 
