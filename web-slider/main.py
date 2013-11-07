@@ -1,9 +1,10 @@
-import spi, pickle, json, rotary_encoder
+import math, spi, pickle, json, rotary_encoder
 import RPi.GPIO as GPIO
 from quick2web import WebServer, SharedValue
 
 SPI_SEL1_PIN = 13
 SPI_SEL2_PIN = 15
+SPI_SEL3_PIN = 8
 ENC1A_PIN = 12
 ENC1B_PIN = 16
 ENC2A_PIN = 18
@@ -73,20 +74,15 @@ def airset_open(connection):
   print "Volume SPI configuration: ",status
   GPIO.setup(SPI_SEL1_PIN, GPIO.OUT)
   GPIO.setup(SPI_SEL2_PIN, GPIO.OUT)
+  GPIO.setup(SPI_SEL3_PIN, GPIO.OUT)
   print 'GPIOs initialized'
 
 ###     VOLUME FUNCTIONS    ###
 def volume_updated(value, connection):
   print("Shared Value %d" % int(volume.value))
-  # Set GPIOs to 10 to address separate LED graph
-  GPIO.output(SPI_SEL1_PIN, 1)
-  GPIO.output(SPI_SEL2_PIN, 0)
   print "Volume value: ", value
-  print spi.transfer(get_led_level(int(value)))
-  # Set GPIO to 00 to select DAC
-  GPIO.output(SPI_SEL1_PIN, 0)
-  GPIO.output(SPI_SEL2_PIN, 0)
-  print spi.transfer(get_dac_level(0,int(value)))
+  print spi.transfer(get_led_level(0,0,0,int(value)))
+  print spi.transfer(get_pot_level(1,0,0,int(value)))
 
 def volume_open(connection):
   airset_open(connection)
@@ -101,12 +97,8 @@ def tone_updated(value, connection):
   GPIO.output(SPI_SEL1_PIN, 0)
   GPIO.output(SPI_SEL2_PIN, 1)
   print "Tone value: ", value
-  print spi.transfer(get_led_level(int(value)))
-  # Set GPIO to 00 to select DAC
-  GPIO.output(SPI_SEL1_PIN, 0)
-  GPIO.output(SPI_SEL2_PIN, 0)
-  print spi.transfer(get_dac_level(1,int(value)))
-  print spi.transfer(get_dac_level(2,int(value)))
+  print spi.transfer(get_led_level(0,0,1,int(value)))
+  print spi.transfer(get_pot_level(1,0,1,int(value)))
   
 def tone_open(connection):
   airset_open(connection)
@@ -117,15 +109,9 @@ def tone_open(connection):
 
 ###    SUSTAIN FUNCTIONS   ###
 def sustain_updated(value, connection):
-  # Set GPIOs to 11 to address separate LED graph
-  GPIO.output(SPI_SEL1_PIN, 1)
-  GPIO.output(SPI_SEL2_PIN, 1)
   print "Sustain value: ", value
-  print spi.transfer(get_led_level(int(value)))
-  # Set GPIO to 00 to select DAC
-  GPIO.output(SPI_SEL1_PIN, 0)
-  GPIO.output(SPI_SEL2_PIN, 0)
-  print spi.transfer(get_dac_level(3,int(value)))
+  print spi.transfer(get_led_level(0,1,0,int(value)))
+  print spi.transfer(get_pot_level(1,1,0,int(value)))
   
 def sustain_open(connection):
   airset_open(connection)
@@ -164,7 +150,11 @@ def get_preset(value, connection):
   print "Preset Set!"
   print value
 
-def get_led_level(value):
+def get_led_level(sel3, sel2, sel1, value):
+  # Set GPIOs to address separate LED graph
+  GPIO.output(SPI_SEL1_PIN, sel1)
+  GPIO.output(SPI_SEL2_PIN, sel2)
+  GPIO.output(SPI_SEL3_PIN, sel3)
   led_division = 6
   exponent = value/led_division
   word = '{0:016b}'.format((2 ** exponent)-1)
@@ -174,13 +164,14 @@ def get_led_level(value):
   # Return tuple in the format ((1st 8bits, 2nd 8bits))
   return((int(word1,2),int(word2,2)))
 
-def get_dac_level(dac, value):
-  value = value * 655
-  binary_val = '{0:016b}'.format(value)
-  binary_val1 = binary_val[0:-8]
-  binary_val2 = binary_val[8:]
-  # Return tuple in the format ((DAC selection 2bits, 1st 8bits, 2nd 8bits))
-  return((dac,int(binary_val1,2),int(binary_val2,2)))
+def get_pot_level(sel3, sel2, sel1, value):
+  # Set GPIOs to address separate digital pots
+  GPIO.output(SPI_SEL1_PIN, sel1)
+  GPIO.output(SPI_SEL2_PIN, sel2)
+  GPIO.output(SPI_SEL3_PIN, sel3)
+  value = int(math.ceil(value*2.55))
+  # Return tuple in the format ((8bits))
+  return((value))
 
 if __name__ == '__main__':
   main()
