@@ -5,12 +5,12 @@ from quick2web import WebServer, SharedValue
 SPI_SEL1_PIN = 13
 SPI_SEL2_PIN = 15
 SPI_SEL3_PIN = 8
-ENC1A_PIN = 12
-ENC1B_PIN = 16
-ENC2A_PIN = 18
-ENC2B_PIN = 22
-ENC3A_PIN = 7
-ENC3B_PIN = 11
+VOL_ENC_A = 12
+VOL_ENC_B = 16
+TON_ENC_A = 18
+TON_ENC_B = 22
+SUS_ENC_A = 7
+SUS_ENC_B = 11
 
 volume = SharedValue(20)
 tone = SharedValue(20)
@@ -79,45 +79,41 @@ def airset_open(connection):
 
 ###     VOLUME FUNCTIONS    ###
 def volume_updated(value, connection):
-  print("Shared Value %d" % int(volume.value))
   print "Volume value: ", value
-  print spi.transfer(get_led_level(0,0,0,int(value)))
-  print spi.transfer(get_pot_level(1,0,0,int(value)))
+  print spi.transfer(get_led_level(0,1,1,int(value)))
+  print spi.transfer(get_pot_level(0,1,0,int(value)))
 
 def volume_open(connection):
   airset_open(connection)
-  encoder = rotary_encoder.RotaryEncoder(ENC1A_PIN, ENC1B_PIN)
-  GPIO.add_event_detect(ENC1A_PIN, GPIO.BOTH, callback=lambda x: enc_update(volume,encoder,connection))
-  GPIO.add_event_detect(ENC1B_PIN, GPIO.BOTH, callback=lambda x: enc_update(volume,encoder,connection))
+  encoder = rotary_encoder.RotaryEncoder(VOL_ENC_A, VOL_ENC_B)
+  GPIO.add_event_detect(VOL_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(volume,encoder,connection))
+  GPIO.add_event_detect(VOL_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(volume,encoder,connection))
 
 
 ###    TONE FUNCTIONS    ###
 def tone_updated(value, connection):
-  # Set GPIOs to 01 to address separate LED graph
-  GPIO.output(SPI_SEL1_PIN, 0)
-  GPIO.output(SPI_SEL2_PIN, 1)
   print "Tone value: ", value
   print spi.transfer(get_led_level(0,0,1,int(value)))
-  print spi.transfer(get_pot_level(1,0,1,int(value)))
+  print spi.transfer(get_pot_level(1,0,0,int(value)))
   
 def tone_open(connection):
   airset_open(connection)
-  encoder = rotary_encoder.RotaryEncoder(ENC2A_PIN, ENC2B_PIN)
-  GPIO.add_event_detect(ENC2A_PIN, GPIO.BOTH, callback=lambda x: enc_update(tone,encoder,connection))
-  GPIO.add_event_detect(ENC2B_PIN, GPIO.BOTH, callback=lambda x: enc_update(tone,encoder,connection))
+  encoder = rotary_encoder.RotaryEncoder(TON_ENC_A, TON_ENC_B)
+  GPIO.add_event_detect(TON_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(tone,encoder,connection))
+  GPIO.add_event_detect(TON_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(tone,encoder,connection))
 
 
 ###    SUSTAIN FUNCTIONS   ###
 def sustain_updated(value, connection):
   print "Sustain value: ", value
-  print spi.transfer(get_led_level(0,1,0,int(value)))
-  print spi.transfer(get_pot_level(1,1,0,int(value)))
+  print spi.transfer(get_led_level(0,0,0,int(value)))
+  print spi.transfer(get_pot_level(1,0,1,int(value)))
   
 def sustain_open(connection):
   airset_open(connection)
-  encoder = rotary_encoder.RotaryEncoder(ENC3A_PIN, ENC3B_PIN)
-  GPIO.add_event_detect(ENC3A_PIN, GPIO.BOTH, callback=lambda x: enc_update(sustain,encoder,connection))
-  GPIO.add_event_detect(ENC3B_PIN, GPIO.BOTH, callback=lambda x: enc_update(sustain,encoder,connection))
+  encoder = rotary_encoder.RotaryEncoder(SUS_ENC_A, SUS_ENC_B)
+  GPIO.add_event_detect(SUS_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(sustain,encoder,connection))
+  GPIO.add_event_detect(SUS_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(sustain,encoder,connection))
 
 
 ###    CLOSE SPI    ###
