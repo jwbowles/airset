@@ -71,7 +71,7 @@ def enc_update(shared_value,encoder,connection):
 def airset_open(connection):
   # Open and configure SPI interface
   status = spi.openSPI(speed=1000000, mode=0)
-  print "Volume SPI configuration: ",status
+  print "SPI configuration: ",status
   GPIO.setup(SPI_SEL1_PIN, GPIO.OUT)
   GPIO.setup(SPI_SEL2_PIN, GPIO.OUT)
   GPIO.setup(SPI_SEL3_PIN, GPIO.OUT)
@@ -80,40 +80,46 @@ def airset_open(connection):
 ###     VOLUME FUNCTIONS    ###
 def volume_updated(value, connection):
   print "Volume value: ", value
-  print spi.transfer(get_led_level(0,1,1,int(value)))
-  print spi.transfer(get_pot_level(0,1,0,int(value)))
+  print "LED Level: ", spi.transfer(get_led_level(0,1,1,int(value)))
+  print "Pot Level: ", spi.transfer(get_pot_level(0,1,0,int(value)))
 
 def volume_open(connection):
   airset_open(connection)
   encoder = rotary_encoder.RotaryEncoder(VOL_ENC_A, VOL_ENC_B)
   GPIO.add_event_detect(VOL_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(volume,encoder,connection))
   GPIO.add_event_detect(VOL_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(volume,encoder,connection))
+  # Send initial values
+  volume_updated(volume.value, connection)
 
 
 ###    TONE FUNCTIONS    ###
 def tone_updated(value, connection):
   print "Tone value: ", value
-  print spi.transfer(get_led_level(0,0,1,int(value)))
-  print spi.transfer(get_pot_level(1,0,0,int(value)))
+  print "LED Level: ", spi.transfer(get_led_level(0,0,1,int(value)))
+  print "Pot Level: ", spi.transfer(get_pot_level(1,0,0,int(value)))
   
 def tone_open(connection):
   airset_open(connection)
   encoder = rotary_encoder.RotaryEncoder(TON_ENC_A, TON_ENC_B)
   GPIO.add_event_detect(TON_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(tone,encoder,connection))
   GPIO.add_event_detect(TON_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(tone,encoder,connection))
+  # Send initial values
+  tone_updated(tone.value, connection)
 
 
 ###    SUSTAIN FUNCTIONS   ###
 def sustain_updated(value, connection):
   print "Sustain value: ", value
-  print spi.transfer(get_led_level(0,0,0,int(value)))
-  print spi.transfer(get_pot_level(1,0,1,int(value)))
+  print "LED Level: ", spi.transfer(get_led_level(0,0,0,int(value)))
+  print "Pot Level: ", spi.transfer(get_pot_level(1,0,1,int(value)))
   
 def sustain_open(connection):
   airset_open(connection)
   encoder = rotary_encoder.RotaryEncoder(SUS_ENC_A, SUS_ENC_B)
   GPIO.add_event_detect(SUS_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(sustain,encoder,connection))
   GPIO.add_event_detect(SUS_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(sustain,encoder,connection))
+  # Send initial values
+  sustain_updated(sustain.value, connection)
 
 
 ###    CLOSE SPI    ###
@@ -167,7 +173,7 @@ def get_pot_level(sel3, sel2, sel1, value):
   GPIO.output(SPI_SEL3_PIN, sel3)
   value = int(math.ceil(value*2.55))
   # Return tuple in the format ((8bits))
-  return((value))
+  return((0,value))
 
 if __name__ == '__main__':
   main()
