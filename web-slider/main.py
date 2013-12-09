@@ -5,12 +5,12 @@ from quick2web import WebServer, SharedValue
 SPI_SEL1_PIN = 13
 SPI_SEL2_PIN = 15
 SPI_SEL3_PIN = 8
-VOL_ENC_A = 12
-VOL_ENC_B = 16
-TON_ENC_A = 18
-TON_ENC_B = 22
-SUS_ENC_A = 7
-SUS_ENC_B = 11
+VOL_ENC_B = 12
+VOL_ENC_A = 16
+TON_ENC_B = 18
+TON_ENC_A = 22
+SUS_ENC_B = 7
+SUS_ENC_A = 11
 
 volume = SharedValue(20)
 tone = SharedValue(20)
@@ -22,6 +22,14 @@ def main():
     GPIO.setmode(GPIO.BOARD)
     
     webserver = WebServer(port=8888, debug=True)
+
+    # Open and configure SPI interface
+    status = spi.openSPI(speed=1000000, mode=0)
+    print "SPI configuration: ",status
+    GPIO.setup(SPI_SEL1_PIN, GPIO.OUT)
+    GPIO.setup(SPI_SEL2_PIN, GPIO.OUT)
+    GPIO.setup(SPI_SEL3_PIN, GPIO.OUT)
+    print 'GPIOs initialized'
     
     volume.change_handlers.append(volume_updated)
     volume.open_handlers.append(volume_open)
@@ -48,7 +56,7 @@ def main():
   except (KeyboardInterrupt, SystemExit):
     print "Closing SPI..."
     spi.closeSPI()
-    print "Cleaning GPIO..."
+    print "Cleaning up GPIO..."
     GPIO.cleanup()
 
   
@@ -69,13 +77,7 @@ def enc_update(shared_value,encoder,connection):
         other_connection.send(encoded)
   
 def airset_open(connection):
-  # Open and configure SPI interface
-  status = spi.openSPI(speed=1000000, mode=0)
-  print "SPI configuration: ",status
-  GPIO.setup(SPI_SEL1_PIN, GPIO.OUT)
-  GPIO.setup(SPI_SEL2_PIN, GPIO.OUT)
-  GPIO.setup(SPI_SEL3_PIN, GPIO.OUT)
-  print 'GPIOs initialized'
+  print "New instance opened!"
 
 ###     VOLUME FUNCTIONS    ###
 def volume_updated(value, connection):
@@ -85,9 +87,12 @@ def volume_updated(value, connection):
 
 def volume_open(connection):
   airset_open(connection)
-  encoder = rotary_encoder.RotaryEncoder(VOL_ENC_A, VOL_ENC_B)
-  GPIO.add_event_detect(VOL_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(volume,encoder,connection))
-  GPIO.add_event_detect(VOL_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(volume,encoder,connection))
+  try:
+    encoder = rotary_encoder.RotaryEncoder(VOL_ENC_A, VOL_ENC_B)
+    GPIO.add_event_detect(VOL_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(volume,encoder,connection))
+    GPIO.add_event_detect(VOL_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(volume,encoder,connection))
+  except(RuntimeError):
+    print "Event detection already running."
   # Send initial values
   volume_updated(volume.value, connection)
 
@@ -95,14 +100,17 @@ def volume_open(connection):
 ###    TONE FUNCTIONS    ###
 def tone_updated(value, connection):
   print "Tone value: ", value
-  print "LED Level: ", spi.transfer(get_led_level(0,0,1,int(value)))
-  print "Pot Level: ", spi.transfer(get_pot_level(1,0,0,int(value)))
+  print "LED Level: ", spi.transfer(get_led_level(1,0,0,int(value)))
+  print "Pot Level: ", spi.transfer(get_pot_level(0,0,1,int(value)))
   
 def tone_open(connection):
   airset_open(connection)
-  encoder = rotary_encoder.RotaryEncoder(TON_ENC_A, TON_ENC_B)
-  GPIO.add_event_detect(TON_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(tone,encoder,connection))
-  GPIO.add_event_detect(TON_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(tone,encoder,connection))
+  try:
+    encoder = rotary_encoder.RotaryEncoder(TON_ENC_A, TON_ENC_B)
+    GPIO.add_event_detect(TON_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(tone,encoder,connection))
+    GPIO.add_event_detect(TON_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(tone,encoder,connection))
+  except(RuntimeError):
+    print "Event detection already running."
   # Send initial values
   tone_updated(tone.value, connection)
 
@@ -110,24 +118,29 @@ def tone_open(connection):
 ###    SUSTAIN FUNCTIONS   ###
 def sustain_updated(value, connection):
   print "Sustain value: ", value
-  print "LED Level: ", spi.transfer(get_led_level(0,0,0,int(value)))
-  print "Pot Level: ", spi.transfer(get_pot_level(1,0,1,int(value)))
+  print "LED Level: ", spi.transfer(get_led_level(1,0,1,int(value)))
+  print "Pot Level: ", spi.transfer(get_pot_level(0,0,0,int(value)))
   
 def sustain_open(connection):
   airset_open(connection)
-  encoder = rotary_encoder.RotaryEncoder(SUS_ENC_A, SUS_ENC_B)
-  GPIO.add_event_detect(SUS_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(sustain,encoder,connection))
-  GPIO.add_event_detect(SUS_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(sustain,encoder,connection))
+  try:
+    encoder = rotary_encoder.RotaryEncoder(SUS_ENC_A, SUS_ENC_B)
+    GPIO.add_event_detect(SUS_ENC_A, GPIO.BOTH, callback=lambda x: enc_update(sustain,encoder,connection))
+    GPIO.add_event_detect(SUS_ENC_B, GPIO.BOTH, callback=lambda x: enc_update(sustain,encoder,connection))
+  except(RuntimeError):
+    print "Event detection already running."
   # Send initial values
   sustain_updated(sustain.value, connection)
 
 
 ###    CLOSE SPI    ###
 def airset_close(connection):
-  print "Closing SPI..."
-  spi.closeSPI()
-  print "Cleaning GPIO..."
-  GPIO.cleanup()
+  #print "Closing SPI..."
+  #spi.closeSPI()
+  #print "Cleaning GPIO..."
+  #GPIO.cleanup()
+  print "Closing Airset..."
+  print "Waiting for new instance..."
 
 ###    SAVE PRESET   ###
 def save_preset(value, connection):
