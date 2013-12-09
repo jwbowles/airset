@@ -135,10 +135,6 @@ def sustain_open(connection):
 
 ###    CLOSE SPI    ###
 def airset_close(connection):
-  #print "Closing SPI..."
-  #spi.closeSPI()
-  #print "Cleaning GPIO..."
-  #GPIO.cleanup()
   print "Closing Airset..."
   print "Waiting for new instance..."
 
